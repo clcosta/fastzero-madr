@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Header, status
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -18,7 +18,11 @@ from madr.server.services.account_service import (
     register_user,
     update_user,
 )
-from madr.server.services.auth_service import auth_service, get_current_user
+from madr.server.services.auth_service import (
+    auth_service,
+    get_current_user,
+    refresh_token_service,
+)
 
 router = APIRouter(
     prefix='/contas',
@@ -72,8 +76,6 @@ def create_token(form: AuthForm, db: DBSession):
 
 
 @router.post('/refresh-token', status_code=status.HTTP_200_OK)
-def refresh_token():
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={'message': 'Token atualizado com sucesso!'},
-    )
+def refresh_token(current_user: CurrentUser, db: DBSession):
+    new_token = refresh_token_service(current_user.token, db)
+    return new_token

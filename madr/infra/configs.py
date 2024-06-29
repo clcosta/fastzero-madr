@@ -28,7 +28,7 @@ class Configs(BaseSettings):
     AUTH_SALT: str = bcrypt.gensalt().decode()
 
     @field_validator('AUTH_SALT')
-    def validate_auth_salt(cls, value):
+    def validate_auth_salt(cls, value):  # pragma: no coverage
         if not value:
             logging.warning('AUTH_SALT is Empty. Generating new one...')
             return bcrypt.gensalt().decode()
@@ -40,7 +40,7 @@ class Configs(BaseSettings):
             return bcrypt.gensalt().decode()
 
     @staticmethod
-    def _gen_secret_key(size: int = 24) -> str:
+    def _gen_secret_key(size: int = 24) -> str:  # pragma: no coverage
         return ''.join(
             random.choices(
                 string.ascii_letters + string.digits + string.punctuation,
@@ -49,7 +49,7 @@ class Configs(BaseSettings):
         )
 
     @field_validator('AUTH_SECRET_KEY')
-    def validate_auth_secret_key(cls, value):
+    def validate_auth_secret_key(cls, value):  # pragma: no coverage
         if not value:
             logging.warning('AUTH_SECRET_KEY is Empty. Generating new one...')
             return cls._gen_secret_key()

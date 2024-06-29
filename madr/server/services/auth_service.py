@@ -22,6 +22,10 @@ InvalidCredentialsException = HTTPException(
     headers={'WWW-Authenticate': 'Bearer'},
 )
 
+NotFoundUserException = HTTPException(
+    status_code=status.HTTP_404_NOT_FOUND, detail='Usuário não encontrado'
+)
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='contas/token')
 
 
@@ -37,6 +41,16 @@ def auth_service(form: AuthForm, db: Session):
     return {'access_token': access_token, 'token_type': 'bearer'}
 
 
+def refresh_token_service(token: str, db: Session):
+    payload = security.get_payload_from_token(token)
+    username = payload.get('sub')
+    user = db.scalar(select(User).where(User.email == username))
+    if user is None:
+        raise NotFoundUserException
+    access_token = security.create_access_token({'sub': user.email})
+    return {'access_token': access_token, 'token_type': 'bearer'}
+
+
 async def get_current_user(db: DBSession, token: str = Depends(oauth2_scheme)):
     if not token:
         raise InvalidCredentialsException
@@ -47,4 +61,5 @@ async def get_current_user(db: DBSession, token: str = Depends(oauth2_scheme)):
     user = db.scalar(select(User).where(User.email == username))
     if user is None:
         raise InvalidCredentialsException
+    user.token = token
     return user

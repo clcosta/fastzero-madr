@@ -30,7 +30,9 @@ def get_payload_from_token(token: str):
         payload: dict = jwt.decode(
             token, config.AUTH_SECRET_KEY, algorithms=[config.AUTH_ALGORITHM]
         )
-        if payload.values():
+        p = payload.copy()
+        p.pop('exp')
+        if p.values():
             return payload
         raise CredentialException
     except jwt.DecodeError as e:
