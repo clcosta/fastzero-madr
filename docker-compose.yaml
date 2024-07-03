@@ -1,0 +1,25 @@
+services:
+  database:
+    image: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: madr
+      POSTGRES_PASSWORD: pgPass123
+    ports:
+      - "5432:5432"
+
+  madr:
+    image: madr
+    entrypoint: ./entrypoint.sh
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - database
+    environment:
+      DATABASE_URL: postgresql+psycopg://postgres:pgPass123@database:5432/madr
+
+volumes:
+  pgdata:

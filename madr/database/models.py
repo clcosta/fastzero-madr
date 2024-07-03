@@ -39,7 +39,7 @@ class Book:
 @table_registry.mapped_as_dataclass
 class Novelists:
     __tablename__ = 'novelists'
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(init=False, primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
     books: Mapped[list[Book]] = relationship(
         init=False,
