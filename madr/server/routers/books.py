@@ -32,14 +32,19 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 
 @router.post(
     '/livro',
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_201_CREATED,
     response_model=CreateBookResponseSchema,
 )
 def create_book(
     data: CreateBookRequestSchema, current_user: CurrentUser, db: DBSession
 ):
     book = create_book_service(data, db)
-    return book
+    return CreateBookResponseSchema(
+        id=book.id,
+        ano=book.year,
+        titulo=book.title,
+        romancista_id=book.author_id,
+    )
 
 
 @router.delete('/livro/{id}', status_code=status.HTTP_200_OK)
@@ -60,7 +65,12 @@ def update_book(
     db: DBSession,
 ):
     new_book = update_book_service(id, data, db)
-    return new_book
+    return UpdateBookRequestSchema(
+        id=new_book.id,
+        ano=new_book.year,
+        titulo=new_book.title,
+        romancista_id=new_book.author_id,
+    )
 
 
 @router.get(
@@ -70,7 +80,12 @@ def update_book(
 )
 def get_book(id: int, db: DBSession):
     book = get_book_service({'id': id}, db=db)
-    return book
+    return GetBookResponseSchema(
+        id=book.id,
+        ano=book.year,
+        titulo=book.title,
+        romancista_id=book.author_id,
+    )
 
 
 @router.get(
@@ -81,14 +96,14 @@ def get_book(id: int, db: DBSession):
 def get_books(
     db: DBSession,
     year: int | None = Query(None, alias='ano'),
-    name: str | None = Query(None, alias='nome'),
+    title: str | None = Query(None, alias='titulo'),
     page: int = Query(1, alias='pagina'),
 ):
     where = {}
     if year:
         where['year'] = year
-    if name:
-        where['title']
+    if title:
+        where['title'] = title
     books = get_books_service(where, db, page)
     books = [
         GetBookResponseSchema(

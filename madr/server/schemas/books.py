@@ -15,8 +15,8 @@ class CreateBookResponseSchema(BaseBook):
     id: int
 
 
-class UpdateBookRequestSchema(BaseModel):
-    year: int
+class UpdateBookRequestSchema(BaseBook):
+    pass
 
 
 class UpdateBookResponseSchema(BaseBook):

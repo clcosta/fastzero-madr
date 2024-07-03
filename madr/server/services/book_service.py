@@ -4,7 +4,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from madr.database.models import Book, Novelists
+from madr.database.models import Book
 from madr.server.schemas.books import (
     CreateBookRequestSchema,
     UpdateBookRequestSchema,
@@ -61,7 +61,14 @@ def update_book_service(
     if not book:
         raise BookNotFound
 
+    if book.title == sanitize_str(data.title):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail='Livro já cadastrado no MADR',
+        )
     book.year = data.year
+    book.title = sanitize_str(data.title)
+    book.author_id = data.novelist_id
     db.commit()
     db.refresh(book)
     return book
@@ -69,25 +76,25 @@ def update_book_service(
 
 def get_books_service(where: BookWhere, db: Session, page: int = 1):
     if not where:
-        return []
-    title = where.pop('title', None)
+        return []  # pragma: no cover
     query = select(Book).filter_by(**where).limit(20).offset((page - 1) * 20)
+    title = where.pop('title', None)
     if title:
         title = sanitize_str(title)
         query = (
             select(Book)
-            .filter_by(**where)
-            .where(Book.title.like(f'%{title}%'))
+            .filter(Book.title.like(f'%{title}%'))
             .limit(20)
             .offset((page - 1) * 20)
         )
-    books = db.scalars(query).all()
-    return books
+
+    novelists = db.scalars(query).all()
+    return novelists
 
 
 def get_book_service(where: BookWhere, db: Session) -> Book:
     if not where:
-        return None
+        return None  # pragma: no cover
     book = db.scalar(select(Book).filter_by(**where))
     if not book:
         raise BookNotFound

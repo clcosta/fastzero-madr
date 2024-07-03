@@ -46,6 +46,11 @@ def update_novelist_service(id: int, data: NovelistRequestSchema, db: Session):
     novelist = db.get(Novelists, id)
     if not novelist:
         raise NovelistNotFound
+    if novelist.name == sanitize_str(data.name):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail='Romancista já consta no MADR',
+        )
     novelist.name = sanitize_str(data.name)
     db.commit()
     db.refresh(novelist)

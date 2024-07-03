@@ -127,6 +127,24 @@ class TestUpdateNovelist:
         )
         assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
+    def test_update_novelist_with_same_name_conflict(
+        self, client: TestClient, token: str
+    ):
+        novelist = {'nome': 'Dale Carnegie'}
+        response = client.post(
+            '/romancistas/romancista',
+            json=novelist,
+            headers={'Authorization': f'Bearer {token}'},
+        )
+        assert response.status_code == HTTPStatus.CREATED
+        res_json = response.json()
+        response = client.patch(
+            f'/romancistas/romancista/{res_json["id"]}',
+            json=novelist,
+            headers={'Authorization': f'Bearer {token}'},
+        )
+        assert response.status_code == HTTPStatus.CONFLICT
+
 
 class TestGetNovelist:
     def test_get_novelist(self, client: TestClient, token: str):
@@ -163,7 +181,7 @@ class TestGetNovelist:
         response = client.get(f'/romancistas/romancista?{filters}')
         assert response.status_code == HTTPStatus.OK
         res_json = response.json()
-        assert res_json.get('romancistas')
+        assert 'romancistas' in res_json
         assert len(res_json['romancistas']) == 1
 
     def test_get_novelist_using_unexistent_query_params(
@@ -188,6 +206,13 @@ class TestGetNovelist:
         filters = urlencode({'nome': 'romancista'})
         response = client.get(f'/romancistas/romancista?{filters}')
         assert response.status_code == HTTPStatus.OK
-        res_json = response.json()
-        assert res_json.get('romancistas')
-        assert len(res_json['romancistas']) == 20
+        res_json_page_1 = response.json()
+        assert res_json_page_1.get('romancistas')
+        assert len(res_json_page_1['romancistas']) == 20
+
+        filters = urlencode({'nome': 'romancista', 'page': 2})
+        response = client.get(f'/romancistas/romancista?{filters}')
+        res_json_page_2 = response.json()
+        assert response.status_code == HTTPStatus.OK
+
+        assert res_json_page_1['romancistas'] != res_json_page_2['romancistas']
