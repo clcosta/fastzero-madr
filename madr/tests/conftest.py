@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -58,3 +60,31 @@ def token(client: TestClient, user: User):
         data={'username': user.email, 'password': user.clean_password},
     )
     return response.json()['access_token']
+
+
+@pytest.fixture()
+def deleted_user_token(client: TestClient):
+    new_user = {
+        'username': 'dale',
+        'email': 'dalecarnegie@carnegie.com',
+        'senha': 'howtowinfriends',
+    }
+    res = client.post('/contas/conta', json=new_user)
+    assert res.status_code == HTTPStatus.CREATED
+
+    login = {
+        'username': new_user['email'],
+        'password': new_user['senha'],
+    }
+    response = client.post('/contas/token', data=login)
+    assert response.status_code == HTTPStatus.OK
+
+    access_token = response.json()['access_token']
+    user_id = res.json()['id']
+
+    response = client.delete(
+        f'/contas/conta/{user_id}',
+        headers={'Authorization': f'Bearer {access_token}'},
+    )
+    assert response.status_code == HTTPStatus.OK
+    return access_token

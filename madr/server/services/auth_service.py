@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -41,13 +41,10 @@ def auth_service(form: AuthForm, db: Session):
     return {'access_token': access_token, 'token_type': 'bearer'}
 
 
-def refresh_token_service(token: str, db: Session):
+def refresh_token_service(token: str):
     payload = security.get_payload_from_token(token)
-    username = payload.get('sub')
-    user = db.scalar(select(User).where(User.email == username))
-    if user is None:
-        raise NotFoundUserException
-    access_token = security.create_access_token({'sub': user.email})
+    email = payload.get('sub')
+    access_token = security.create_access_token({'sub': email})
     return {'access_token': access_token, 'token_type': 'bearer'}
 
 
@@ -56,8 +53,6 @@ async def get_current_user(db: DBSession, token: str = Depends(oauth2_scheme)):
         raise InvalidCredentialsException
     payload = security.get_payload_from_token(token)
     username: str = payload.get('sub')
-    if not username:
-        raise InvalidCredentialsException
     user = db.scalar(select(User).where(User.email == username))
     if user is None:
         raise InvalidCredentialsException

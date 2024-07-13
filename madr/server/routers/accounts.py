@@ -76,6 +76,6 @@ def create_token(form: AuthForm, db: DBSession):
 
 
 @router.post('/refresh-token', status_code=status.HTTP_200_OK)
-def refresh_token(current_user: CurrentUser, db: DBSession):
-    new_token = refresh_token_service(current_user.token, db)
+def refresh_token(current_user: CurrentUser):
+    new_token = refresh_token_service(current_user.token)
     return new_token

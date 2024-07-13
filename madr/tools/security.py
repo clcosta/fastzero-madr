@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 import jwt
 from fastapi import HTTPException, status
+from jwt.exceptions import ExpiredSignatureError
 
 from madr.infra import config
 
@@ -35,5 +36,7 @@ def get_payload_from_token(token: str):
         if p.values():
             return payload
         raise CredentialException
+    except ExpiredSignatureError as e:
+        raise CredentialException from e
     except jwt.DecodeError as e:
-        raise CredentialException
+        raise CredentialException from e
