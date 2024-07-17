@@ -8,7 +8,7 @@ RUN pip install poetry
 
 RUN poetry config installer.max-workers 10
 RUN poetry install --no-interaction --no-ansi
-RUN poetry run alembic upgrade head
 
 EXPOSE 8000
-CMD poetry run uvicorn --host 0.0.0.0 madr:app
+
+ENTRYPOINT ["./entrypoint.sh"]
